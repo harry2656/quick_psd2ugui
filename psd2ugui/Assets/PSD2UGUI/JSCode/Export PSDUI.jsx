@@ -135,53 +135,64 @@ function exportLayer(obj)
 
 function exportLayerSet(_layer)
 {
-    if (typeof(_layer.layers) == "undefined" || _layer.layers.length<=0 ){
+    if (typeof(_layer.layers) == "undefined" || _layer.layers.length<=0 )
+    {
         return
     }
     if (_layer.name.search("@ScrollView") >= 0)
     {
-      exportScrollView(_layer);
-  }
-  else if (_layer.name.search("@Grid") >= 0)
-  {
-      exportGrid(_layer);
-  }
-  else if (_layer.name.search("@Button") >= 0)
-  {
-      exportButton(_layer);
-  }
-  else if (_layer.name.search("@Toggle") >= 0)
-  {
-      exportToggle(_layer);
-  }
-  else if (_layer.name.search("@Panel") >= 0)
-  {
-      exportPanel(_layer);
-  }
-  else if (_layer.name.search("@Slider")>=0) {
-      exportSlider(_layer);
-  }
-  else if (_layer.name.search("@Group")>=0) {
-      exportGroup(_layer);
-  }
-  else if (_layer.name.search("@InputField") >=0) {
-      exportInputField(_layer);
-  }
-  else if (_layer.name.search("@Scrollbar") >=0) {
-      exportScrollBar(_layer);
-  }else if (_layer.name.search("@LE") >=0) {//增加布局元素导出
-        exportLayoutElement(_layer);
+        exportScrollView(_layer);
     }
-  else
-  {
-    sceneData += "<Layer>";
-    sceneData += "<type>Normal</type>";
-    sceneData += "<name>" + _layer.name + "</name>";    
-    sceneData += "<layers>";
-    exportAllLayers(_layer)
-    sceneData += "</layers>";
-    sceneData += "</Layer>";
-  }
+    else if (_layer.name.search("@Grid") >= 0)
+    {
+        exportGrid(_layer);
+    }
+    else if (_layer.name.search("@Button") >= 0)
+    {
+        exportButton(_layer);
+    }
+    else if (_layer.name.search("@Toggle") >= 0)
+    {
+        exportToggle(_layer);
+    }
+    else if (_layer.name.search("@Panel") >= 0)
+    {
+        exportPanel(_layer);
+    }
+    else if (_layer.name.search("@Slider")>=0) 
+    {
+        exportSlider(_layer);
+    }
+    else if (_layer.name.search("@Group")>=0) 
+    {
+        exportGroup(_layer);
+    }
+    else if (_layer.name.search("@InputField") >=0) 
+    {
+        exportInputField(_layer);
+    }
+    else if (_layer.name.search("@Scrollbar") >=0) 
+    {
+        exportScrollBar(_layer);
+    }
+    else if (_layer.name.search("@LE") >=0)                         //增加布局元素导出
+    {       
+        exportLayoutElement(_layer)
+    }
+     else if (_layer.name.search("@TabGroup") >=0)              //增加页签类型导出
+    {       
+        exportTabGroup(_layer)
+    }
+    else
+    {
+        sceneData += "<Layer>";
+        sceneData += "<type>Normal</type>";
+        sceneData += "<name>" + _layer.name + "</name>";    
+        sceneData += "<layers>";
+        exportAllLayers(_layer)
+        sceneData += "</layers>";
+        sceneData += "</Layer>";
+    }
 }
 
 function exportLayoutElement(obj)
@@ -193,13 +204,6 @@ function exportLayoutElement(obj)
 
     sceneData += "<layers>";
     exportAllLayers(obj);
-
-    // sceneData += "<images>";
-    // for (var j = obj.artLayers.length - 1; 0 <= j; j--)
-    // {
-    //     exportArtLayer(obj.artLayers[j]);
-    // }
-    // sceneData += "</images>";
     sceneData += "</layers>";
     
     obj.visible = true;
@@ -319,6 +323,8 @@ function setLayerSizeAndPos(layer)
     sceneData += "</size>";
 
     layer.visible = false;
+    
+    return recSize;
 }
 
 function exportGrid(obj)
@@ -340,10 +346,11 @@ function exportGrid(obj)
     if (obj.layers[obj.layers.length - 1].name.search("@Size") < 0)
     {
         alert("Bottom layer's name doesn't contain '@Size'");
+        return;
     }
     else
     {  
-        setLayerSizeAndPos(obj.layers[obj.layers.length - 1]);
+        recSize = setLayerSizeAndPos(obj.layers[obj.layers.length - 1]);
     }
 
     var totalContentCount = obj.layers.length - 1;  
@@ -630,6 +637,71 @@ function exportLabel(obj,validFileName)
         sceneData += "<string>" + obj.textItem.justification + "</string>";     //加对齐方式
     }
     sceneData += "</arguments>";
+	
+	// 透明度
+	sceneData += "<opacity>" + obj.opacity +"</opacity>";
+	
+	// 新增渐变
+	if(obj.name.search("_JB") >= 0)
+	{
+		var _text = obj.name.substring(obj.name.search("_JB"), obj.name.length);
+		
+		var params = _text.split("|");
+		params = params[0].split(":");
+		
+		if (params.length > 1)
+		{
+			sceneData += "<gradient>"
+				
+			for (var i = 0; i < params.length; ++i)
+			{
+				if (params[i].search("_") >=0)
+				{
+					continue;
+				}
+				
+				sceneData += params[i];
+				
+				if (i < params.length - 1)
+				{
+					sceneData += "|";
+				}
+			}
+			
+			sceneData += "</gradient>";
+		}
+	}
+	
+	// 新增描边
+	if(obj.name.search("_OL") >= 0)
+	{
+		var _text = obj.name.substring(obj.name.search("_OL"), obj.name.length);
+		
+		var params = _text.split("|");
+		params = params[0].split(":");
+				
+		if (params.length > 1)
+		{
+			sceneData += "<outline>"
+				
+			for (var i = 0; i < params.length; ++i)
+			{
+				if (params[i].search("_") >=0)
+				{
+					continue;
+				}
+				
+				sceneData += params[i];
+				
+				if (i < params.length - 1)
+				{
+					sceneData += "|";
+				}
+			}
+			
+			sceneData += "</outline>";
+		}
+	}
 }
 
 function exportTexture(obj,validFileName)
@@ -637,6 +709,10 @@ function exportTexture(obj,validFileName)
     //var validFileName = makeValidFileName(obj.name);
     sceneData += "<imageType>" + "Texture" + "</imageType>\n";
     sceneData += "<name>" + validFileName + "</name>\n";
+	
+	// 透明度
+	// sceneData += "<opacity>" + obj.opacity +"</opacity>";
+		
     obj.visible = true;
     saveScenePng(duppedPsd.duplicate(), validFileName, true);
     obj.visible = false;
@@ -656,38 +732,52 @@ function exportImage(obj,validFileName)
     {
         sceneData += "<imageSource>" + "Global" + "</imageSource>\n";
     }
+	else if(obj.name.search("CustomAtlas") >= 0)
+	{
+		sceneData += "<imageSource>" + "CustomAtlas" + "</imageSource>\n";
+		
+		var atlasName = obj.name.substring (obj.name.lastIndexOf("@CustomAtlas"), obj.name.length);
+		// 拆分出图集名
+		
+		
+		// 添加图集名
+		sceneData += "<AtlasName>" + "" + "</AtlasName>";
+	}
     else
     {
         sceneData += "<imageSource>" + "Custom" + "</imageSource>\n";      
     }
 
-  if (oriName.search("_9S") >= 0)
-  {
-      sceneData += "<imageType>" + "SliceImage" + "</imageType>\n";
-      obj.visible = true;
-      var _objName = obj.name
-      // var newDoc = app.documents.add(duppedPsd.width, duppedPsd.height,duppedPsd.resolution, _objName+"doc",NewDocumentMode.RGB,DocumentFill.TRANSPARENT)
-      // app.activeDocument = duppedPsd
-      // obj.copy()
-      // app.activeDocument = newDoc
-      // newDoc.paste()
-      //   newDoc.activeLayer.name = _objName
-      var recSize = getLayerRec(duppedPsd.duplicate(),true);
-        sceneData += "<position>";
-        sceneData += "<x>" + recSize.x + "</x>";
-        sceneData += "<y>" + recSize.y + "</y>";
-        sceneData += "</position>";
+	if (oriName.search("_9S") >= 0)
+	{
+	  sceneData += "<imageType>" + "SliceImage" + "</imageType>\n";
+	  obj.visible = true;
+	  var _objName = obj.name
+	  // var newDoc = app.documents.add(duppedPsd.width, duppedPsd.height,duppedPsd.resolution, _objName+"doc",NewDocumentMode.RGB,DocumentFill.TRANSPARENT)
+	  // app.activeDocument = duppedPsd
+	  // obj.copy()
+	  // app.activeDocument = newDoc
+	  // newDoc.paste()
+	  //   newDoc.activeLayer.name = _objName
+	  var recSize = getLayerRec(duppedPsd.duplicate(),true);
+		sceneData += "<position>";
+		sceneData += "<x>" + recSize.x + "</x>";
+		sceneData += "<y>" + recSize.y + "</y>";
+		sceneData += "</position>";
 
-        sceneData += "<size>";
-        sceneData += "<width>" + recSize.width + "</width>";
-        sceneData += "<height>" + recSize.height + "</height>";
-        sceneData += "</size>";
+		sceneData += "<size>";
+		sceneData += "<width>" + recSize.width + "</width>";
+		sceneData += "<height>" + recSize.height + "</height>";
+		sceneData += "</size>";
 
-      // _9sliceCutImg(newDoc,_objName,validFileName); 
-      _9sliceCutImg(duppedPsd.duplicate(),_objName,validFileName); 
-      obj.visible = false;
-      return;
-  }
+		// 透明度
+		// sceneData += "<opacity>" + obj.opacity +"</opacity>";
+		
+	  // _9sliceCutImg(newDoc,_objName,validFileName); 
+	  _9sliceCutImg(duppedPsd.duplicate(),_objName,validFileName); 
+	  obj.visible = false;
+	  return;
+	}
     else if(oriName.search("LeftHalf") > 0)       //左右对称的图片切左边一半
     {
         sceneData += "<imageType>" + "LeftHalfImage" + "</imageType>\n";
@@ -705,6 +795,9 @@ function exportImage(obj,validFileName)
         sceneData += "<height>" + recSize.height + "</height>";
         sceneData += "</size>";
         
+		// 透明度
+		// sceneData += "<opacity>" + obj.opacity +"</opacity>";
+		
         cutLeftHalf(duppedPsd.duplicate(),validFileName); 
         obj.visible = false;
         return;
@@ -727,6 +820,9 @@ function exportImage(obj,validFileName)
         sceneData += "<height>" + recSize.height + "</height>";
         sceneData += "</size>";
         
+		// 透明度
+		// sceneData += "<opacity>" + obj.opacity +"</opacity>";
+		
         cutBottomHalf(duppedPsd.duplicate(),validFileName); 
         obj.visible = false;
         return;
@@ -748,6 +844,9 @@ function exportImage(obj,validFileName)
         sceneData += "<height>" + recSize.height + "</height>";
         sceneData += "</size>";
         
+		// 透明度
+		// sceneData += "<opacity>" + obj.opacity +"</opacity>";
+		
         cutQuarter(duppedPsd.duplicate(),validFileName); 
         obj.visible = false;
         return;
@@ -755,12 +854,29 @@ function exportImage(obj,validFileName)
     else
     {
         sceneData += "<imageType>" + "Image" + "</imageType>\n";
+		
+		// 透明度
+		// sceneData += "<opacity>" + obj.opacity +"</opacity>";
     }
 
     obj.visible = true;
     saveScenePng(duppedPsd.duplicate(), validFileName, true);
     obj.visible = false;
           
+}
+
+//导出页签
+function exportTabGroup(obj)
+{
+    var itemName = obj.name.substring(0, obj.name.search("@"));
+    sceneData += ("<Layer>\n<type>TabGroup</type>\n<name>" + itemName + "</name>\n");
+    sceneData += "<layers>";
+    
+    exportAllLayers(obj);
+
+    sceneData += "</layers>";
+
+    sceneData += "\n</Layer>";
 }
 
 function hideAllLayers(obj)
@@ -900,8 +1016,13 @@ function saveScenePng(psd, fileName, writeToDisk,notMerge)
      {
         // save the image
         var pngFile = new File(destinationFolder + "/" + fileName + ".png");
-        var pngSaveOptions = new PNGSaveOptions();
-        psd.saveAs(pngFile, pngSaveOptions, true, Extension.LOWERCASE);
+        //var pngSaveOptions = new PNGSaveOptions();
+        //psd.saveAs(pngFile, pngSaveOptions, true, Extension.LOWERCASE);
+        
+        var pngSaveOptions = new ExportOptionsSaveForWeb();
+        pngSaveOptions.format = SaveDocumentType.PNG;
+        pngSaveOptions.PNG8 = false;
+        psd.exportDocument(pngFile,ExportType.SAVEFORWEB,pngSaveOptions);
     }
     psd.close(SaveOptions.DONOTSAVECHANGES);
 
@@ -911,15 +1032,26 @@ function makeValidFileName(fileName)
 {
     var validName = fileName.replace(/^\s+|\s+$/gm, ''); // trim spaces
     //删除九宫格关键字符
-    validName = validName.replace(/\s*_9S(\:\d+)+/g,"")
+    validName = validName.replace(/\s*_9S(\:\d+)+/g,"");
+	
+	// 删除渐变色关键字
+	validName = validName.replace(/\s*_JB(\:[a-zA-Z0-9]+)+/g,"");
+	
+	// 删除outline
+	validName = validName.replace(/\s*_OL(\:[a-zA-Z0-9]+)+/g,"");
+	
     validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
     validName = validName.replace(/[ ]/g, '_'); // replace spaces with underscores, since some programs still may have troubles with them
-
-    if (validName.match("Common") || validName.match("Global"))
+	
+    if (validName.match("Common") || 
+		validName.match("Global") ||
+		validName.match("CustomAtlas"))
     {
-        validName = validName.substring (0,validName.lastIndexOf ("@"));  //截取@之后的字符串作为图片的名称。
+        validName = validName.substring (0,validName.lastIndexOf ("@"));  //截取@之前的字符串作为图片的名称。
     }
-    else if(!sourcePsdName.match("Common") || !sourcePsdName.match("Global"))    // 判断是否为公用的PSD素材文件，如果不是，则自动为图片增加后缀，防止重名。 公用psd文件的图片层不允许重名。
+    else if(!sourcePsdName.match("Common") ||
+			!sourcePsdName.match("Global") ||
+			!sourcePsdName.match("CustomAtlas"))    // 判断是否为公用的PSD素材文件，如果不是，则自动为图片增加后缀，防止重名。 公用psd文件的图片层不允许重名。
     {
         validName += "_" + uuid++;
     }

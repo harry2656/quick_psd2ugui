@@ -1,6 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
 using System.IO;
+using UnityEngine.EventSystems;
+
 #if UNITY_5_3
 using UnityEditor.SceneManagement;
 #endif
@@ -28,6 +30,7 @@ namespace PSDUIImporter
         private ILayerImport groupImport;
         private ILayerImport inputFiledImport;
         private ILayerImport layoutElemLayerImport;
+        private ILayerImport tabGroupLayerImport;
 
         public PSDImportCtrl(string xmlFilePath)
         {
@@ -76,6 +79,9 @@ namespace PSDUIImporter
                 case LayerType.LayoutElement:
                     layoutElemLayerImport.DrawLayer(layer, parent);
                     break;
+                case LayerType.TabGroup:
+                    tabGroupLayerImport.DrawLayer(layer, parent);
+                    break;
                 default:
                     break;
 
@@ -98,25 +104,25 @@ namespace PSDUIImporter
             switch (image.imageType)
             {
                 case ImageType.Image:
-                    spriteImport.DrawImage(image, parent, parent);
+                    spriteImport.DrawImage(image, parent, ownObj);
                     break;
                 case ImageType.Texture:
-                    textureImport.DrawImage(image, parent, parent);
+                    textureImport.DrawImage(image, parent, ownObj);
                     break;
                 case ImageType.Label:
-                    textImport.DrawImage(image, parent, parent);
+                    textImport.DrawImage(image, parent, ownObj);
                     break;
                 case ImageType.SliceImage:
-                    slicedSpriteImport.DrawImage(image, parent, parent);
+                    slicedSpriteImport.DrawImage(image, parent, ownObj);
                     break;
                 case ImageType.LeftHalfImage:
-                    halfSpriteImport.DrawImage(image, parent);
+                    halfSpriteImport.DrawImage(image, parent, ownObj);
                     break;
                 case ImageType.BottomHalfImage:
-                    halfSpriteImport.DrawImage(image, parent);
+                    halfSpriteImport.DrawImage(image, parent, ownObj);
                     break;
                 case ImageType.QuarterImage:
-                    halfSpriteImport.DrawImage(image, parent);
+                    halfSpriteImport.DrawImage(image, parent, ownObj);
                     break;
                 default:
                     break;
@@ -157,8 +163,19 @@ namespace PSDUIImporter
             scaler.matchWidthOrHeight = 1f;
             scaler.referenceResolution = new Vector2(psdUI.psdSize.width, psdUI.psdSize.height);
 
-            GameObject go = AssetDatabase.LoadAssetAtPath(PSDImporterConst.ASSET_PATH_EVENTSYSTEM, typeof(GameObject)) as GameObject;
-            PSDImportUtility.eventSys = GameObject.Instantiate(go) as GameObject;
+            // find 
+            var _eventSystem = Object.FindObjectOfType<EventSystem>();
+
+            if (_eventSystem != null)
+            {
+                PSDImportUtility.eventSys = _eventSystem.gameObject;
+            }
+            else
+            {
+                GameObject go = AssetDatabase.LoadAssetAtPath(PSDImporterConst.ASSET_PATH_EVENTSYSTEM, typeof(GameObject)) as GameObject;
+
+                PSDImportUtility.eventSys = GameObject.Instantiate(go) as GameObject;
+            }
         }
 
         private void LoadLayers()
@@ -189,6 +206,7 @@ namespace PSDUIImporter
             groupImport = new GroupLayerImport(this);
             inputFiledImport = new InputFieldLayerImport(this);
             layoutElemLayerImport = new LayoutElementLayerImport(this);
+            tabGroupLayerImport = new TabGroupLayerImport(this);
         }
 
         public void BeginDrawUILayers()

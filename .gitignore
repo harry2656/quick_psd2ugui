@@ -3,8 +3,14 @@
 # unity library
 psd2ugui/Library/
 psd2ugui/Temp/
+psd2ugui/Packages/
 
 #vs proj
-psd2ugui.CSharp.Editor.csproj
+*.csproj
 psd2ugui.sln
 psd2ugui.v12.suo
+*.userprefs
+*LuaProject
+/psd2ugui/.vs
+/psd2ugui/Assets/PSD2UGUI/PSD2UGUIConfig.asset
+/psd2ugui/Assets/PSD2UGUI/PSD2UGUIConfig.asset.meta
